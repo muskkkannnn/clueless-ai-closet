@@ -43,17 +43,17 @@
 ## 🚀 Roadmap
 
 ### Phase 1 – Foundation
-- [ ] Initialize Next.js 15 project
-- [ ] Setup Clerk authentication
-- [ ] Setup Supabase (DB + Storage)
+- [x] Initialize Next.js 15 project
+- [x] Setup Clerk authentication
+- [x] Setup Supabase (DB + Storage)
 
 ### Phase 2 – Core MVP Features
-- [ ] Image upload + background removal
-- [ ] Digital closet grid
-- [ ] Outfit canvas (manual selection only)
-- [ ] AI visualization (Gemini NanoBanana – single step)
-- [ ] Save / download visualization
-- [ ] Delete closet items
+- [x] Image upload + background removal
+- [x] Digital closet grid
+- [x] Outfit canvas (manual selection only)
+- [x] AI visualization (Gemini NanoBanana – single step)
+- [x] Save / download visualization
+- [x] Delete closet items
 
 ---
 
