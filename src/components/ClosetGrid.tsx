@@ -1,43 +1,73 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import Image from 'next/image'
-import { useRouter } from 'next/navigation'
+import React from 'react';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@clerk/nextjs';
+import { useRouter } from 'next/navigation';
+import { Item } from '@/types/item';
 
-interface ClothingItem {
-    id: string;
-    image_url: string;
-}
 
 interface ClosetGridProps {
-    initialClothingItems: ClothingItem[];
+  items: Item[];
+  onSelectItem: (item: Item) => void;
+  selectedItems: string[];
 }
 
-export default function ClosetGrid({ initialClothingItems }: ClosetGridProps) {
-    const [clothingItems, setClothingItems] = useState(initialClothingItems);
-    const router = useRouter();
+const ClosetGrid: React.FC<ClosetGridProps> = ({ items, onSelectItem, selectedItems }) => {
+  const { userId } = useAuth();
+  const router = useRouter();
 
-    const handleDelete = async (id: string) => {
-        const res = await fetch(`/api/closet/${id}`, {
-            method: 'DELETE',
-        });
+  const handleDelete = async (item: Item) => {
+    if (!userId) return;
 
-        if (res.ok) {
-            setClothingItems(clothingItems.filter(item => item.id !== id));
-        } else {
-            const { error } = await res.json();
-            alert(`Error deleting item: ${error}`);
-        }
-    };
+    // First, delete the item from the database
+    const { error: dbError } = await supabase.from('items').delete().eq('id', item.id);
 
-    return (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
-            {clothingItems.map((item) => (
-                <div key={item.id}>
-                    <Image src={item.image_url} alt="Clothing item" width={200} height={200} />
-                    <button onClick={() => handleDelete(item.id)}>Delete</button>
-                </div>
-            ))}
-        </div>
-    );
-}
+    if (dbError) {
+      console.error('Error deleting item from database:', dbError);
+      return;
+    }
+
+    // Then, delete the images from storage
+    const originalFileName = item.image_url.substring(item.image_url.lastIndexOf('/') + 1);
+    const processedFileName = item.processed_url.substring(item.processed_url.lastIndexOf('/') + 1);
+
+    const { error: storageError } = await supabase.storage.from('clothing-items').remove([`${userId}/${originalFileName}`, `${userId}/${processedFileName}`]);
+
+    if (storageError) {
+      console.error('Error deleting image from storage:', storageError);
+    }
+
+    router.refresh();
+  };
+
+  return (
+    <div className="bg-gray-200 p-4 rounded-lg">
+      <div className="grid grid-cols-3 gap-4">
+        {items.map((item) => (
+          <div
+            key={item.id}
+            className="relative"
+          >
+            <div
+              className={`bg-white p-4 rounded-lg cursor-pointer ${selectedItems.includes(item.processed_url) ? 'ring-2 ring-blue-500' : ''}`}
+              onClick={() => onSelectItem(item)}
+            >
+              <img src={item.processed_url} alt={item.type} className="w-full h-full object-cover" />
+              <p className="text-center mt-2">{item.type}</p>
+            </div>
+            <button
+              onClick={() => handleDelete(item)}
+              className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
+            >
+              X
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default ClosetGrid;
+

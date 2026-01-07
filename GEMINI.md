@@ -4,7 +4,7 @@
 **App:** Clueless AI Closet  
 
 **Locked MVP Stack:**
-- Next.js 15 (App Router)
+- Next.js 16.1.1 (App Router)
 - Tailwind CSS
 - Supabase (Postgres + Storage)
 - Clerk Authentication
